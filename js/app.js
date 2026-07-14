@@ -3,47 +3,6 @@ import musicalPatterns from "./musical_patterns.js";
 import pitches from "./pitches.js";
 import generateWav from "./wavGenerator.js"
 
-// Initialize pattern selector
-{
-    const selector = document.getElementById("musical_pattern");
-    for (const key of Object.keys(musicalPatterns))
-    {
-        selector.add(new Option(musicalPatterns[key].name, key));
-    }
-}
-
-
-// Initialize note selectors
-{
-    const startPitchSelector = document.getElementById("start_note_pitch");
-    const endPitchSelector = document.getElementById("end_note_pitch");
-    for (const key of Object.keys(pitches))
-    {
-        startPitchSelector.add(new Option(pitches[key].name, key));
-        endPitchSelector.add(new Option(pitches[key].name, key));
-    }
-
-    const startOctaveSelector = document.getElementById("start_note_octave");
-    const endOctaveSelector = document.getElementById("end_note_octave");
-    for (let i = 0; i <= 9; ++i)
-    {
-        startOctaveSelector.add(new Option(i));
-        endOctaveSelector.add(new Option(i));
-    }
-}
-
-
-// Enforce valid value for tempo
-{
-    const tempo = document.getElementById("tempo");
-    tempo.addEventListener("input", () => {
-        if (!tempo.checkValidity())
-        {
-            tempo.value = 200;
-        }
-    });
-}
-
 
 // Get intervals for the full pattern, including repetitions
 function getFullPattern()
@@ -164,6 +123,48 @@ function getMeaningfulFileName()
          +"_to_"
          + pitches[document.getElementById("end_note_pitch").value].name
          + document.getElementById("end_note_octave").value;
+}
+
+
+// Initialize pattern selector
+{
+    const selector = document.getElementById("musical_pattern");
+    for (const key of Object.keys(musicalPatterns))
+    {
+        selector.add(new Option(musicalPatterns[key].name, key));
+    }
+}
+
+
+// Initialize note selectors
+{
+    const startPitchSelector = document.getElementById("start_note_pitch");
+    const endPitchSelector = document.getElementById("end_note_pitch");
+    for (const key of Object.keys(pitches))
+    {
+        startPitchSelector.add(new Option(pitches[key].name, key));
+        endPitchSelector.add(new Option(pitches[key].name, key));
+    }
+
+    const startOctaveSelector = document.getElementById("start_note_octave");
+    const endOctaveSelector = document.getElementById("end_note_octave");
+    for (let i = 0; i <= 9; ++i)
+    {
+        startOctaveSelector.add(new Option(i));
+        endOctaveSelector.add(new Option(i));
+    }
+}
+
+
+// Enforce valid value for tempo
+{
+    const tempo = document.getElementById("tempo");
+    tempo.addEventListener("input", () => {
+        if (!tempo.checkValidity())
+        {
+            tempo.value = 200;
+        }
+    });
 }
 
 

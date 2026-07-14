@@ -4,14 +4,27 @@ import pitches from "./pitches.js";
 import generateWav from "./wavGenerator.js"
 
 
-// Get intervals for the full pattern, including repetitions
-function getFullPattern()
+// Generate all the parameters set by the user
+function getParameters()
 {
-    const selectedPattern = document.getElementById("musical_pattern").value;
-    let intervals = musicalPatterns[selectedPattern].intervals;
-    const repetition = document.getElementById("pattern_repetition").value
+    return {
+        musical_pattern: document.getElementById("musical_pattern").value,
+        pattern_repetition: document.getElementById("pattern_repetition").value,
+        start_note_pitch: document.getElementById("start_note_pitch").value,
+        start_note_octave: parseInt(document.getElementById("start_note_octave").value),
+        end_note_pitch: document.getElementById("end_note_pitch").value,
+        end_note_octave: parseInt(document.getElementById("end_note_octave").value),
+        tempo: parseInt(document.getElementById("tempo").value)
+    };
+}
+
+
+// Get intervals for the full pattern, including repetitions
+function getFullPattern(parameters)
+{
+    let intervals = musicalPatterns[parameters.musical_pattern].intervals;
     let fullPattern = [];
-    for (let char of repetition)
+    for (let char of parameters.pattern_repetition)
     {
         let toAppend = [];
         if (char == "A")
@@ -38,15 +51,10 @@ function getFullPattern()
 
 // The pattern will be played starting on a note, then again and again moved by a semitone until a given note is reached,
 // then again and again until back to where we started
-function getFirstNotes()
+function getFirstNotes(parameters)
 {
-    const selectedStartPitch = document.getElementById("start_note_pitch").value;
-    const selectedStartOctave = document.getElementById("start_note_octave").value;
-    const startNote = pitches[selectedStartPitch].number + 12 * (1 + parseInt(selectedStartOctave));
-
-    const selectedEndPitch = document.getElementById("end_note_pitch").value;
-    const selectedEndOctave = document.getElementById("end_note_octave").value;
-    const endNote = pitches[selectedEndPitch].number + 12 * (1 + parseInt(selectedEndOctave));
+    const startNote = pitches[parameters.start_note_pitch].number + 12 * (1 + parameters.start_note_octave);
+    const endNote = pitches[parameters.end_note_pitch].number + 12 * (1 + parameters.end_note_octave);
 
     // Go from start to end
     let firstNotes = [];
@@ -80,10 +88,10 @@ function getFirstNotes()
 // Returns what to play as an array of arrays
 // - The out array contains an array per beat
 // - Each inner array is what to play on that beat
-function getWhatToPlay()
+function getWhatToPlay(parameters)
 {
-    const fullPattern = getFullPattern();
-    const firstNotes = getFirstNotes();
+    const fullPattern = getFullPattern(parameters);
+    const firstNotes = getFirstNotes(parameters);
 
     let toPlay = [];
 
@@ -104,25 +112,21 @@ function getWhatToPlay()
 }
 
 
-// Get the tempo
-function getTempo()
-{
-    return parseInt(document.getElementById("tempo").value);
-}
-
-
 // Generate a filename (without the extension)
-function getMeaningfulFileName()
+function getMeaningfulFileName(parameters)
 {
-    return document.getElementById("musical_pattern").value
+    return parameters.musical_pattern
          + "_"
-         + document.getElementById("pattern_repetition").value
+         + parameters.pattern_repetition
          + "_"
-         + pitches[document.getElementById("start_note_pitch").value].name
-         + document.getElementById("start_note_octave").value
+         + pitches[parameters.start_note_pitch].name
+         + parameters.start_note_octave
          +"_to_"
-         + pitches[document.getElementById("end_note_pitch").value].name
-         + document.getElementById("end_note_octave").value;
+         + pitches[parameters.end_note_pitch].name
+         + parameters.end_note_octave
+         + "_"
+         + parameters.tempo
+         + "bpm";
 }
 
 
@@ -170,6 +174,7 @@ function getMeaningfulFileName()
 
 // Handle clicks
 document.getElementById("generate").onclick = async () => {
+    // Clear previous
     const player = document.getElementById("player");
     const generateButton = document.getElementById("generate");
     const downloadLink = document.getElementById("download");
@@ -177,13 +182,16 @@ document.getElementById("generate").onclick = async () => {
     downloadLink.hidden = true;
     generateButton.innerText = "Generating..."
 
-    const generated = await generateWav(getWhatToPlay(), getTempo());
+    // Generate
+    const parameters = getParameters();
+    const generated = await generateWav(getWhatToPlay(parameters), parameters.tempo);
     const url = URL.createObjectURL(generated);
     const audio = document.querySelector("audio");
     audio.src = url;
     downloadLink.href = url;
-    downloadLink.download = getMeaningfulFileName() + ".wav"
+    downloadLink.download = getMeaningfulFileName(parameters) + ".wav"
 
+    // Display
     player.hidden = false;
     downloadLink.hidden = false;
     generateButton.innerText = "Generate"

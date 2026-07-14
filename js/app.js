@@ -6,6 +6,7 @@ import generateWav from "./wavGenerator.js"
 
 // Global variables
 let parameterHistory = [];
+let savedParameters = [];
 
 
 // Check that a given value is a valid option for a select object
@@ -214,6 +215,104 @@ function displayHistory()
 }
 
 
+// Update the displayed saved params
+function displaySaved()
+{
+    // Get element
+    const saved = document.getElementById("saved");
+
+    // Remove all children
+    while (saved.hasChildNodes())
+    {
+        saved.removeChild(saved.firstChild);
+    }
+
+    // Create list caption
+    let caption = document.createElement("figcaption");
+    caption.innerText = (savedParameters.length == 0) ? "No saved exercices" : "Saved exercices:";
+    saved.appendChild(caption);
+
+    // Create list
+    let list = document.createElement("ul");
+    saved.appendChild(list);
+    for (let i = savedParameters.length - 1; i >= 0; --i)
+    {
+        let toDisplay = savedParameters[i];
+
+        // List item
+        let savedItem = document.createElement("li");
+        list.appendChild(savedItem);
+
+        // Div with the chosen and default names, clickable to use the params
+        {
+            let div = document.createElement("div");
+            savedItem.appendChild(div);
+
+            if (toDisplay.name != "")
+            {
+                let chosenName = document.createElement("div");
+                chosenName.innerText = toDisplay.name;
+                div.appendChild(chosenName);
+            }
+
+            let defaultName = document.createElement("div");
+            defaultName.innerText = getMeaningfulFileName(toDisplay.params);
+            div.appendChild(defaultName);
+
+            div.addEventListener("click", () => { setParameters(toDisplay.params); });
+        }
+
+        // Rename button
+        {
+            let button = document.createElement("button");
+            button.innerText = "✏️";
+            savedItem.appendChild(button);
+            button.addEventListener("click", () => {
+                // Prompt new name
+                let name = prompt("Edit optional name", toDisplay.name);
+                if (name === null)
+                {
+                    // User clicked Cancel
+                    return;
+                }
+
+                // Save new name
+                name = name.trim();
+                toDisplay.name = name;
+
+                // Update
+                window.localStorage.setItem("saved", JSON.stringify(savedParameters))
+                displaySaved();
+            });
+        }
+
+        // Remove button
+        {
+            let button = document.createElement("button");
+            button.innerText = "🗑️";
+            savedItem.appendChild(button);
+            button.addEventListener("click", () => {
+                // Get name
+                const name = (toDisplay.name != "") ? toDisplay.name : getMeaningfulFileName(toDisplay.params);
+
+                // Ask for confirmation
+                if (!confirm("Are you sure you want to remove " + name + ' ?'))
+                {
+                    return;
+                }
+
+                // Remove saved
+                savedParameters.splice(i, 1);
+
+                // Update
+                window.localStorage.setItem("saved", JSON.stringify(savedParameters))
+                displaySaved();
+            });
+        }
+    }
+}
+
+
 // Initialize pattern selector
 {
     const selector = document.getElementById("musical_pattern");
@@ -276,7 +375,47 @@ function displayHistory()
 }
 
 
-// Handle clicks
+// Retrieve and display saved (if any)
+{
+    // Get saved (if any)
+    const serialized = window.localStorage.getItem("saved");
+    if (serialized)
+    {
+        savedParameters = JSON.parse(serialized);
+    }
+
+    // Display saved
+    displaySaved();
+}
+
+
+// Save parameters when the button is clicked
+document.getElementById("save").addEventListener("click", () => {
+    // Get params
+    const parameters = getParameters();
+
+    // Get name
+    let name = prompt("Choose a name (optional)");
+    if (name === null)
+    {
+        // User clicked Cancel
+        name = ""
+    }
+    else
+    {
+        name = name.trim();
+    }
+
+    // Save
+    savedParameters.push({name: name, params: parameters});
+    window.localStorage.setItem("saved", JSON.stringify(savedParameters))
+
+    // Update display
+    displaySaved();
+});
+
+
+// Generate audio when the button is clicked
 document.getElementById("generate").addEventListener("click", async () => {
     // Clear previous
     const player = document.getElementById("player");

@@ -5,3 +5,16 @@
 #history li:hover {
     background-color: #eee;
 }
+
+#saved li:hover {
+    background-color: #eee;
+}
+
+#saved li div div {
+    cursor: pointer;
+}
+
+#saved li div div:nth-of-type(2) {
+    font-size: 0.8em;
+    font-style: italic;
+}

@@ -34,12 +34,14 @@
         <input type="number" id="tempo" min="1" value=140>
     </p>
     <p>
+        <button id="save">Save</button>
         <button id="generate">Generate</button>
         <a id="download" hidden>
             <button>Download</button>
         </a>
     </p>
     <audio id="player" controls loop hidden></audio>
+    <figure id="saved"></figure>
     <figure id="history"></figure>
     <script src="lib/tone.js"></script>
     <script type="module" src="js/app.js"></script>

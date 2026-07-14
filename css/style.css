@@ -1,0 +1,7 @@
+#history li {
+    cursor: pointer;
+}
+
+#history li:hover {
+    background-color: #eee;
+}

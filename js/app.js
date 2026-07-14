@@ -4,6 +4,24 @@ import pitches from "./pitches.js";
 import generateWav from "./wavGenerator.js"
 
 
+// Global variables
+let parameterHistory = [];
+
+
+// Check that a given value is a valid option for a select object
+function isValidOption(selectObject, value)
+{
+    for (const option of selectObject.options)
+    {
+        if (option.value == value)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+
 // Generate all the parameters set by the user
 function getParameters()
 {
@@ -16,6 +34,40 @@ function getParameters()
         end_note_octave: parseInt(document.getElementById("end_note_octave").value),
         tempo: parseInt(document.getElementById("tempo").value)
     };
+}
+
+
+function setParameters(parameters)
+{
+    // Get relevant elements
+    const musicalPattern = document.getElementById("musical_pattern");
+    const patternRepetition = document.getElementById("pattern_repetition")
+    const startNotePitch = document.getElementById("start_note_pitch");
+    const startNoteOctave = document.getElementById("start_note_octave");
+    const endNotePitch = document.getElementById("end_note_pitch");
+    const endNoteOctave = document.getElementById("end_note_octave");
+    const tempo = document.getElementById("tempo");
+
+    // Check that parameters are valid
+    if (!isValidOption(musicalPattern, parameters.musical_pattern)
+     || !isValidOption(patternRepetition, parameters.pattern_repetition)
+     || !isValidOption(startNotePitch, parameters.start_note_pitch)
+     || !isValidOption(startNoteOctave, parameters.start_note_octave)
+     || !isValidOption(endNotePitch, parameters.end_note_pitch)
+     || !isValidOption(endNoteOctave, parameters.end_note_octave)
+     || parameters.tempo < 1)
+    {
+        console.log("Cannot set parameters because they are invalid:", JSON.stringify(parameters));
+        return;
+    }
+
+    musicalPattern.value = parameters.musical_pattern;
+    patternRepetition.value = parameters.pattern_repetition;
+    startNotePitch.value = parameters.start_note_pitch;
+    startNoteOctave.value = parameters.start_note_octave;
+    endNotePitch.value = parameters.end_note_pitch;
+    endNoteOctave.value = parameters.end_note_octave;
+    tempo.value = parameters.tempo;
 }
 
 
@@ -72,7 +124,7 @@ function getFirstNotes(parameters)
             firstNotes.push(i);
         }
     }
-    
+
     // Go back from end to first
     const back = [...firstNotes].reverse();
     if (back.length > 1)
@@ -80,7 +132,7 @@ function getFirstNotes(parameters)
         back.shift();
         firstNotes.push(...back);
     }
-    
+
     return firstNotes;
 }
 
@@ -130,6 +182,38 @@ function getMeaningfulFileName(parameters)
 }
 
 
+// Update the displayed history
+function displayHistory()
+{
+    // Get element
+    const history = document.getElementById("history");
+
+    // Remove all children
+    while (history.hasChildNodes())
+    {
+        history.removeChild(history.firstChild);
+    }
+
+    // Create list caption
+    let caption = document.createElement("figcaption");
+    caption.innerText = (parameterHistory.length == 0) ? "No history" : "History:";
+    history.appendChild(caption);
+
+    // Create list
+    let list = document.createElement("ul");
+    history.appendChild(list);
+    const reversedHistory = [...parameterHistory].reverse();
+    for (const toDisplay of reversedHistory)
+    {
+        let historyItem = document.createElement("li");
+        historyItem.innerText = getMeaningfulFileName(toDisplay);
+        list.appendChild(historyItem);
+
+        historyItem.addEventListener("click", () => { setParameters(toDisplay); });
+    }
+}
+
+
 // Initialize pattern selector
 {
     const selector = document.getElementById("musical_pattern");
@@ -172,8 +256,28 @@ function getMeaningfulFileName(parameters)
 }
 
 
+// Retrieve and display history (if any)
+{
+    // Get history (if any)
+    const serialized = window.localStorage.getItem("history");
+    if (serialized)
+    {
+        parameterHistory = JSON.parse(serialized);
+    }
+
+    // Display history
+    displayHistory();
+
+    // Restore last parameters
+    if (parameterHistory.length > 0)
+    {
+        setParameters(parameterHistory[parameterHistory.length - 1]);
+    }
+}
+
+
 // Handle clicks
-document.getElementById("generate").onclick = async () => {
+document.getElementById("generate").addEventListener("click", async () => {
     // Clear previous
     const player = document.getElementById("player");
     const generateButton = document.getElementById("generate");
@@ -191,8 +295,29 @@ document.getElementById("generate").onclick = async () => {
     downloadLink.href = url;
     downloadLink.download = getMeaningfulFileName(parameters) + ".wav"
 
+    // Update history
+    {
+        // Remove parameters if they already were in the history
+        parameterHistory = parameterHistory.filter(p => JSON.stringify(p) != JSON.stringify(parameters));
+
+        // Push new parameters
+        parameterHistory.push(parameters);
+
+        // Maximum history length
+        while(parameterHistory.length > 20)
+        {
+            parameterHistory.shift();
+        }
+
+        // Save new history
+        window.localStorage.setItem("history", JSON.stringify(parameterHistory))
+
+        // Update display
+        displayHistory();
+    }
+
     // Display
     player.hidden = false;
     downloadLink.hidden = false;
     generateButton.innerText = "Generate"
-};
+});

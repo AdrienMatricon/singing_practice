@@ -399,7 +399,7 @@ document.getElementById("save").addEventListener("click", () => {
     if (name === null)
     {
         // User clicked Cancel
-        name = ""
+        return;
     }
     else
     {

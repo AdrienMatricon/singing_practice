@@ -102,39 +102,38 @@ function getFullPattern(parameters)
 }
 
 
-// The pattern will be played starting on a note, then again and again moved by a semitone until a given note is reached,
-// then again and again until back to where we started
-function getFirstNotes(parameters)
+// The pattern will be played at an initial position, then shifted semitone by semitone until a given position and back
+function getLowestNotes(parameters)
 {
     const startNote = pitches[parameters.start_note_pitch].number + 12 * (1 + parameters.start_note_octave);
     const endNote = pitches[parameters.end_note_pitch].number + 12 * (1 + parameters.end_note_octave);
 
     // Go from start to end
-    let firstNotes = [];
+    let lowestNotes = [];
     if (startNote <= endNote)
     {
         for (let i = startNote; i <= endNote; ++i)
         {
-            firstNotes.push(i);
+            lowestNotes.push(i);
         }
     }
     else
     {
         for (let i = startNote; i >= endNote; --i)
         {
-            firstNotes.push(i);
+            lowestNotes.push(i);
         }
     }
 
-    // Go back from end to first
-    const back = [...firstNotes].reverse();
+    // Go back from end to start
+    const back = [...lowestNotes].reverse();
     if (back.length > 1)
     {
         back.shift();
-        firstNotes.push(...back);
+        lowestNotes.push(...back);
     }
 
-    return firstNotes;
+    return lowestNotes;
 }
 
 
@@ -144,13 +143,13 @@ function getFirstNotes(parameters)
 function getWhatToPlay(parameters)
 {
     const fullPattern = getFullPattern(parameters);
-    const firstNotes = getFirstNotes(parameters);
+    const lowestNotes = getLowestNotes(parameters);
 
     let toPlay = [];
 
-    for (const first of firstNotes)
+    for (const lowest of lowestNotes)
     {
-        const notes = fullPattern.map(number => number + first);
+        const notes = fullPattern.map(number => number + lowest);
 
         toPlay.push([]);
         toPlay.push([notes[0]]);

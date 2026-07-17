@@ -8,7 +8,12 @@
 </head>
 <body>
     <p>
-        <label>Choose a pattern:</label>
+        This tool plays a musical pattern at an initial position,
+        then shifts it semitone by semitone until a given position and back
+    </p>
+    <hr />
+    <p>
+        <label>Choose a musical pattern:</label>
         <select id="musical_pattern"></select>
         <select id="pattern_repetition">
             <option value="A">Ascending</option>
@@ -20,12 +25,12 @@
         </select>
     </p>
     <p>
-        <label>Choose where to start the pattern the first time:</label>
+        <label>Choose initial lowest note:</label>
         <select id="start_note_pitch"></select>
         <select id="start_note_octave"></select>
     </p>
     <p>
-        <label>Choose up to where the pattern should be moved:</label>
+        <label>Choose furthest lowest note:</label>
         <select id="end_note_pitch"></select>
         <select id="end_note_octave"></select>
     </p>
@@ -41,7 +46,9 @@
         </a>
     </p>
     <audio id="player" controls loop hidden></audio>
+    <hr />
     <figure id="saved"></figure>
+    <hr />
     <figure id="history"></figure>
     <script src="lib/tone.js"></script>
     <script type="module" src="js/app.js"></script>

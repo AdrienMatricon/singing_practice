@@ -69,13 +69,52 @@ function audioBufferToWav(audioBuffer)
 
 
 // Play the sounds that we want to play
-function playSounds(Tone, whatToPlay, tempo)
+async function playSounds(Tone, whatToPlay, tempo)
 {
     // Determine the length of a beat
     const beat = 60. / tempo;
 
-    // Create a synth and connect it to the main output
-    const synth = new Tone.PolySynth().toDestination();
+    // Create a piano and connect it to the main output
+    const piano = new Tone.Sampler({
+        urls: {
+            "A0" : "piano/A0v3.ogg",
+            "C1" : "piano/C1v3.ogg",
+            "D#1": "piano/Dsharp1v3.ogg",
+            "F#1": "piano/Fsharp1v3.ogg",
+            "A1" : "piano/A1v3.ogg",
+            "C2" : "piano/C2v3.ogg",
+            "D#2": "piano/Dsharp2v3.ogg",
+            "F#2": "piano/Fsharp2v3.ogg",
+            "A2" : "piano/A2v3.ogg",
+            "C3" : "piano/C3v3.ogg",
+            "D#3": "piano/Dsharp3v3.ogg",
+            "F#3": "piano/Fsharp3v3.ogg",
+            "A3" : "piano/A3v3.ogg",
+            "C4" : "piano/C4v3.ogg",
+            "D#4": "piano/Dsharp4v3.ogg",
+            "F#4": "piano/Fsharp4v3.ogg",
+            "A4" : "piano/A4v3.ogg",
+            "C5" : "piano/C5v3.ogg",
+            "D#5": "piano/Dsharp5v3.ogg",
+            "F#5": "piano/Fsharp5v3.ogg",
+            "A5" : "piano/A5v3.ogg",
+            "C6" : "piano/C6v3.ogg",
+            "D#6": "piano/Dsharp6v3.ogg",
+            "F#6": "piano/Fsharp6v3.ogg",
+            "A6" : "piano/A6v3.ogg",
+            "C7" : "piano/C7v3.ogg",
+            "D#7": "piano/Dsharp7v3.ogg",
+            "F#7": "piano/Fsharp7v3.ogg",
+            "A7" : "piano/A7v3.ogg",
+            "C8" : "piano/C8v3.ogg"
+        }
+    }).toDestination();
+
+    // Wait for the samples to be loaded
+    await Tone.loaded();
+
+    // Set the volume (default is too low)
+    piano.volume.value = 12;
 
     // Play notes
     let t = 0;
@@ -83,7 +122,7 @@ function playSounds(Tone, whatToPlay, tempo)
     {
         if (notes.length > 0)
         {
-            synth.triggerAttackRelease(notes.map(note => Tone.Frequency(note, "midi")), 1. * beat, t);
+            piano.triggerAttackRelease(notes.map(note => Tone.Frequency(note, "midi")), 1. * beat, t);
         }
         t += 1. * beat;
     }
@@ -95,7 +134,7 @@ async function getAudioBuffer(whatToPlay, tempo)
     const Tone = await import("tone");
     const duration = whatToPlay.length * 60 / tempo;
     const audioBuffer = await Tone.Offline(async () => {
-        playSounds(Tone, whatToPlay, tempo);
+        await playSounds(Tone, whatToPlay, tempo);
     }, duration);
     return audioBuffer;
 }

@@ -1,7 +1,9 @@
 
-import musicalPatterns from "./musical_patterns.js";
-import pitches from "./pitches.js";
-import generateWav from "./wavGenerator.js"
+import musicalPatterns from "./data/musical_patterns.js";
+import pitches from "./data/pitches.js";
+import generateWav from "./utils/wavGenerator.js"
+
+import "./style.css";
 
 
 // Global variables

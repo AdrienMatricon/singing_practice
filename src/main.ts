@@ -1,22 +1,37 @@
 
-import musicalPatterns from "./data/musical_patterns.js";
-import pitches from "./data/pitches.js";
-import generateWav from "./utils/wavGenerator.js"
+import musicalPatterns from "./data/musical_patterns";
+import pitches from "./data/pitches";
+import generateWav from "./utils/wavGenerator"
 
 import "./style.css";
 
 
+type Parameters = {
+    musical_pattern: string,
+    pattern_repetition: string,
+    start_note_pitch: string,
+    start_note_octave: number,
+    end_note_pitch: string,
+    end_note_octave: number,
+    tempo: number,
+};
+
+type SavedParameters = {
+    name: string,
+    params: Parameters,
+};
+
 // Global variables
-let parameterHistory = [];
-let savedParameters = [];
+let parameterHistory: Parameters[] = [];
+let savedParameters: SavedParameters[] = [];
 
 
 // Check that a given value is a valid option for a select object
-function isValidOption(selectObject, value)
+function isValidOption(selectObject: HTMLSelectElement, value: string|number): boolean
 {
     for (const option of selectObject.options)
     {
-        if (option.value == value)
+        if (option.value === value)
         {
             return true;
         }
@@ -26,30 +41,30 @@ function isValidOption(selectObject, value)
 
 
 // Generate all the parameters set by the user
-function getParameters()
+function getParameters(): Parameters
 {
     return {
-        musical_pattern: document.getElementById("musical_pattern").value,
-        pattern_repetition: document.getElementById("pattern_repetition").value,
-        start_note_pitch: document.getElementById("start_note_pitch").value,
-        start_note_octave: parseInt(document.getElementById("start_note_octave").value),
-        end_note_pitch: document.getElementById("end_note_pitch").value,
-        end_note_octave: parseInt(document.getElementById("end_note_octave").value),
-        tempo: parseInt(document.getElementById("tempo").value)
+        musical_pattern: (document.getElementById("musical_pattern") as HTMLSelectElement).value,
+        pattern_repetition: (document.getElementById("pattern_repetition") as HTMLSelectElement).value,
+        start_note_pitch: (document.getElementById("start_note_pitch") as HTMLSelectElement).value,
+        start_note_octave: parseInt((document.getElementById("start_note_octave") as HTMLSelectElement).value),
+        end_note_pitch: (document.getElementById("end_note_pitch") as HTMLSelectElement).value,
+        end_note_octave: parseInt((document.getElementById("end_note_octave") as HTMLSelectElement).value),
+        tempo: parseInt((document.getElementById("tempo") as HTMLInputElement).value)
     };
 }
 
 
-function setParameters(parameters)
+function setParameters(parameters: Parameters): void
 {
     // Get relevant elements
-    const musicalPattern = document.getElementById("musical_pattern");
-    const patternRepetition = document.getElementById("pattern_repetition")
-    const startNotePitch = document.getElementById("start_note_pitch");
-    const startNoteOctave = document.getElementById("start_note_octave");
-    const endNotePitch = document.getElementById("end_note_pitch");
-    const endNoteOctave = document.getElementById("end_note_octave");
-    const tempo = document.getElementById("tempo");
+    const musicalPattern = document.getElementById("musical_pattern") as HTMLSelectElement;
+    const patternRepetition = document.getElementById("pattern_repetition") as HTMLSelectElement;
+    const startNotePitch = document.getElementById("start_note_pitch") as HTMLSelectElement;
+    const startNoteOctave = document.getElementById("start_note_octave") as HTMLSelectElement;
+    const endNotePitch = document.getElementById("end_note_pitch") as HTMLSelectElement;
+    const endNoteOctave = document.getElementById("end_note_octave") as HTMLSelectElement;
+    const tempo = document.getElementById("tempo") as HTMLInputElement;
 
     // Check that parameters are valid
     if (!isValidOption(musicalPattern, parameters.musical_pattern)
@@ -67,22 +82,22 @@ function setParameters(parameters)
     musicalPattern.value = parameters.musical_pattern;
     patternRepetition.value = parameters.pattern_repetition;
     startNotePitch.value = parameters.start_note_pitch;
-    startNoteOctave.value = parameters.start_note_octave;
+    startNoteOctave.value = parameters.start_note_octave.toString();
     endNotePitch.value = parameters.end_note_pitch;
-    endNoteOctave.value = parameters.end_note_octave;
-    tempo.value = parameters.tempo;
+    endNoteOctave.value = parameters.end_note_octave.toString();
+    tempo.value = parameters.tempo.toString();
 }
 
 
 // Get intervals for the full pattern, including repetitions
-function getFullPattern(parameters)
+function getFullPattern(parameters: Parameters): number[]
 {
-    let intervals = musicalPatterns[parameters.musical_pattern].intervals;
+    let intervals = musicalPatterns[parameters.musical_pattern as keyof typeof musicalPatterns].intervals;
     let fullPattern = [];
     for (let char of parameters.pattern_repetition)
     {
         let toAppend = [];
-        if (char == "A")
+        if (char === "A")
         {
             toAppend = [...intervals];
         }
@@ -105,10 +120,10 @@ function getFullPattern(parameters)
 
 
 // The pattern will be played at an initial position, then shifted semitone by semitone until a given position and back
-function getLowestNotes(parameters)
+function getLowestNotes(parameters: Parameters): number[]
 {
-    const startNote = pitches[parameters.start_note_pitch].number + 12 * (1 + parameters.start_note_octave);
-    const endNote = pitches[parameters.end_note_pitch].number + 12 * (1 + parameters.end_note_octave);
+    const startNote = pitches[parameters.start_note_pitch as keyof typeof pitches].number + 12 * (1 + parameters.start_note_octave);
+    const endNote = pitches[parameters.end_note_pitch as keyof typeof pitches].number + 12 * (1 + parameters.end_note_octave);
 
     // Go from start to end
     let lowestNotes = [];
@@ -142,7 +157,7 @@ function getLowestNotes(parameters)
 // Returns what to play as an array of arrays
 // - The out array contains an array per beat
 // - Each inner array is what to play on that beat
-function getWhatToPlay(parameters)
+function getWhatToPlay(parameters: Parameters): number[][]
 {
     const fullPattern = getFullPattern(parameters);
     const lowestNotes = getLowestNotes(parameters);
@@ -167,16 +182,16 @@ function getWhatToPlay(parameters)
 
 
 // Generate a filename (without the extension)
-function getMeaningfulFileName(parameters)
+function getMeaningfulFileName(parameters: Parameters): string
 {
     return parameters.musical_pattern
          + "_"
          + parameters.pattern_repetition
          + "_"
-         + pitches[parameters.start_note_pitch].name
+         + pitches[parameters.start_note_pitch as keyof typeof pitches].name
          + parameters.start_note_octave
          +"_to_"
-         + pitches[parameters.end_note_pitch].name
+         + pitches[parameters.end_note_pitch as keyof typeof pitches].name
          + parameters.end_note_octave
          + "_"
          + parameters.tempo
@@ -185,20 +200,20 @@ function getMeaningfulFileName(parameters)
 
 
 // Update the displayed history
-function displayHistory()
+function displayHistory(): void
 {
     // Get element
-    const history = document.getElementById("history");
+    const history = document.getElementById("history") as HTMLElement;
 
     // Remove all children
-    while (history.hasChildNodes())
+    while (history.firstChild)
     {
         history.removeChild(history.firstChild);
     }
 
     // Create list caption
     let caption = document.createElement("figcaption");
-    caption.innerText = (parameterHistory.length == 0) ? "No history" : "History:";
+    caption.innerText = (parameterHistory.length === 0) ? "No history" : "History:";
     history.appendChild(caption);
 
     // Create list
@@ -217,20 +232,20 @@ function displayHistory()
 
 
 // Update the displayed saved params
-function displaySaved()
+function displaySaved(): void
 {
     // Get element
-    const saved = document.getElementById("saved");
+    const saved = document.getElementById("saved") as HTMLElement;
 
     // Remove all children
-    while (saved.hasChildNodes())
+    while (saved.firstChild)
     {
         saved.removeChild(saved.firstChild);
     }
 
     // Create list caption
     let caption = document.createElement("figcaption");
-    caption.innerText = (savedParameters.length == 0) ? "No saved exercices" : "Saved exercices:";
+    caption.innerText = (savedParameters.length === 0) ? "No saved exercices" : "Saved exercices:";
     saved.appendChild(caption);
 
     // Create list
@@ -249,7 +264,7 @@ function displaySaved()
             let div = document.createElement("div");
             savedItem.appendChild(div);
 
-            if (toDisplay.name != "")
+            if (toDisplay.name !== "")
             {
                 let chosenName = document.createElement("div");
                 chosenName.innerText = toDisplay.name;
@@ -294,7 +309,7 @@ function displaySaved()
             savedItem.appendChild(button);
             button.addEventListener("click", () => {
                 // Get name
-                const name = (toDisplay.name != "") ? toDisplay.name : getMeaningfulFileName(toDisplay.params);
+                const name = (toDisplay.name !== "") ? toDisplay.name : getMeaningfulFileName(toDisplay.params);
 
                 // Ask for confirmation
                 if (!confirm("Are you sure you want to remove " + name + ' ?'))
@@ -316,8 +331,8 @@ function displaySaved()
 
 // Initialize pattern selector
 {
-    const selector = document.getElementById("musical_pattern");
-    for (const key of Object.keys(musicalPatterns))
+    const selector = document.getElementById("musical_pattern") as HTMLSelectElement;
+    for (const key of Object.keys(musicalPatterns) as (keyof typeof musicalPatterns)[])
     {
         selector.add(new Option(musicalPatterns[key].name, key));
     }
@@ -326,31 +341,31 @@ function displaySaved()
 
 // Initialize note selectors
 {
-    const startPitchSelector = document.getElementById("start_note_pitch");
-    const endPitchSelector = document.getElementById("end_note_pitch");
-    for (const key of Object.keys(pitches))
+    const startPitchSelector = document.getElementById("start_note_pitch") as HTMLSelectElement;
+    const endPitchSelector = document.getElementById("end_note_pitch") as HTMLSelectElement;
+    for (const key of Object.keys(pitches)as (keyof typeof pitches)[])
     {
         startPitchSelector.add(new Option(pitches[key].name, key));
         endPitchSelector.add(new Option(pitches[key].name, key));
     }
 
-    const startOctaveSelector = document.getElementById("start_note_octave");
-    const endOctaveSelector = document.getElementById("end_note_octave");
+    const startOctaveSelector = document.getElementById("start_note_octave") as HTMLSelectElement;
+    const endOctaveSelector = document.getElementById("end_note_octave") as HTMLSelectElement;
     for (let i = 0; i <= 9; ++i)
     {
-        startOctaveSelector.add(new Option(i));
-        endOctaveSelector.add(new Option(i));
+        startOctaveSelector.add(new Option(i.toString()));
+        endOctaveSelector.add(new Option(i.toString()));
     }
 }
 
 
 // Enforce valid value for tempo
 {
-    const tempo = document.getElementById("tempo");
+    const tempo = document.getElementById("tempo") as HTMLInputElement;
     tempo.addEventListener("input", () => {
         if (!tempo.checkValidity())
         {
-            tempo.value = 200;
+            tempo.value = "200";
         }
     });
 }
@@ -391,7 +406,7 @@ function displaySaved()
 
 
 // Save parameters when the button is clicked
-document.getElementById("save").addEventListener("click", () => {
+(document.getElementById("save") as HTMLElement).addEventListener("click", () => {
     // Get params
     const parameters = getParameters();
 
@@ -417,11 +432,11 @@ document.getElementById("save").addEventListener("click", () => {
 
 
 // Generate audio when the button is clicked
-document.getElementById("generate").addEventListener("click", async () => {
+(document.getElementById("generate") as HTMLElement).addEventListener("click", async () => {
     // Clear previous
-    const player = document.getElementById("player");
-    const generateButton = document.getElementById("generate");
-    const downloadLink = document.getElementById("download");
+    const player = document.getElementById("player") as HTMLElement;
+    const generateButton = document.getElementById("generate") as HTMLElement;
+    const downloadLink = document.getElementById("download") as HTMLAnchorElement;
     player.hidden = true;
     downloadLink.hidden = true;
     generateButton.innerText = "Generating..."
@@ -430,7 +445,7 @@ document.getElementById("generate").addEventListener("click", async () => {
     const parameters = getParameters();
     const generated = await generateWav(getWhatToPlay(parameters), parameters.tempo);
     const url = URL.createObjectURL(generated);
-    const audio = document.querySelector("audio");
+    const audio = document.querySelector("audio") as HTMLAudioElement;
     audio.src = url;
     downloadLink.href = url;
     downloadLink.download = getMeaningfulFileName(parameters) + ".wav"
@@ -438,7 +453,7 @@ document.getElementById("generate").addEventListener("click", async () => {
     // Update history
     {
         // Remove parameters if they already were in the history
-        parameterHistory = parameterHistory.filter(p => JSON.stringify(p) != JSON.stringify(parameters));
+        parameterHistory = parameterHistory.filter(p => JSON.stringify(p) !== JSON.stringify(parameters));
 
         // Push new parameters
         parameterHistory.push(parameters);

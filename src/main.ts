@@ -1,7 +1,7 @@
 
-import musicalPatterns from "./data/musical_patterns.js";
-import pitches from "./data/pitches.js";
-import generateWav from "./utils/wavGenerator.js"
+import musicalPatterns from "./data/musical_patterns";
+import pitches from "./data/pitches";
+import generateWav from "./utils/wavGenerator"
 
 import "./style.css";
 

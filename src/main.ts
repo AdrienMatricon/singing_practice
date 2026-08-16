@@ -1,9 +1,17 @@
 
+import { initializeTranslation } from "./i18n/translate";
+import { ActiveLanguage } from "./model/Language";
+
 import musicalPatterns from "./data/musical_patterns";
 import pitches from "./data/pitches";
 import generateWav from "./utils/wavGenerator"
 
 import "./style.css";
+
+
+// Initialize translation
+const activeLanguage = new ActiveLanguage();
+initializeTranslation(activeLanguage);
 
 
 type Parameters = {

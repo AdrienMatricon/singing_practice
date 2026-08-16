@@ -1,6 +1,8 @@
 
+import { LanguageSelectionController } from "./controllers/LanguageSelectionController";
 import { initializeTranslation } from "./i18n/translate";
 import { ActiveLanguage } from "./model/Language";
+import { LanguageSelectionView } from "./ui/LanguageSelectionView";
 
 import musicalPatterns from "./data/musical_patterns";
 import pitches from "./data/pitches";
@@ -12,6 +14,14 @@ import "./style.css";
 // Initialize translation
 const activeLanguage = new ActiveLanguage();
 initializeTranslation(activeLanguage);
+
+// Views
+const languageSelectionView
+    = new LanguageSelectionView(document.querySelector("#language-selector")!);
+
+// Controllers
+const languageSelectionController
+    = new LanguageSelectionController(languageSelectionView, activeLanguage);
 
 
 type Parameters = {

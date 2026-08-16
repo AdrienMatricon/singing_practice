@@ -1,3 +1,17 @@
+#language-selector {
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+#language-selector img {
+    width: 32px;
+    height: 21px;
+    object-fit: cover;
+    cursor: pointer;
+}
+
 #history li {
     cursor: pointer;
 }

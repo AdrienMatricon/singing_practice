@@ -1,7 +1,9 @@
 
+import { CreditsController } from "./controllers/CreditsController";
 import { LanguageSelectionController } from "./controllers/LanguageSelectionController";
 import { initializeTranslation } from "./i18n/translate";
 import { ActiveLanguage } from "./model/Language";
+import { CreditsView } from "./ui/CreditsView";
 import { LanguageSelectionView } from "./ui/LanguageSelectionView";
 
 import musicalPatterns from "./data/musical_patterns";
@@ -18,10 +20,14 @@ initializeTranslation(activeLanguage);
 // Views
 const languageSelectionView
     = new LanguageSelectionView(document.querySelector("#language-selector")!);
+const creditsView
+    = new CreditsView(document.querySelector("#credits")!);
 
 // Controllers
 const languageSelectionController
     = new LanguageSelectionController(languageSelectionView, activeLanguage);
+const creditsController
+    = new CreditsController(creditsView, activeLanguage);
 
 
 type Parameters = {

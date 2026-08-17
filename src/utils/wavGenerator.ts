@@ -1,7 +1,5 @@
 import * as Tone from "tone";
-
-type Note = number;
-type PlaybackSequence = readonly (readonly Note[])[];
+import { MusicalSequence, getDuration } from "../model/MusicalSequence";
 
 interface WavEncodableAudioBuffer {
     readonly numberOfChannels: number;
@@ -84,7 +82,7 @@ function audioBufferToWav(audioBuffer: WavEncodableAudioBuffer): Blob
 
 
 // Play the sounds that we want to play
-async function playSounds(whatToPlay: PlaybackSequence, tempo: number): Promise<void>
+async function playSounds(sequence: MusicalSequence, tempo: number): Promise<void>
 {
     // Determine the length of a beat
     const beat = 60. / tempo;
@@ -134,44 +132,44 @@ async function playSounds(whatToPlay: PlaybackSequence, tempo: number): Promise<
 
     // Play notes
     let t = 0;
-    for (const notes of whatToPlay)
+    for (const timedNote of sequence)
     {
-        if (notes.length > 0)
+        if (timedNote.note !== null)
         {
             piano.triggerAttackRelease(
-                notes.map((note) => Tone.Frequency(note, "midi").toNote()),
-                1. * beat,
+                Tone.Frequency(timedNote.note, "midi").toNote(),
+                timedNote.duration * beat,
                 t,
             );
         }
-        t += 1. * beat;
+        t += timedNote.duration * beat;
     }
 }
 
 
 // Generate an audio buffer of the sounds we want to play
-async function getAudioBuffer(whatToPlay: PlaybackSequence, tempo: number): Promise<Tone.ToneAudioBuffer>
+async function getAudioBuffer(sequence: MusicalSequence, tempo: number): Promise<Tone.ToneAudioBuffer>
 {
     // Wait for the ToneJS module to start
     // (not really necessary for offline generation, but let's keep it)
     await Tone.start();
 
     // Generate buffer
-    const duration = whatToPlay.length * 60 / tempo;
+    const duration = getDuration(sequence) * 60 / tempo;
     const audioBuffer = await Tone.Offline(async () => {
-        await playSounds(whatToPlay, tempo);
+        await playSounds(sequence, tempo);
     }, duration);
     return audioBuffer;
 }
 
 
 // Generate a 16-bit PCM WAV blob of the sounds we want to play
-export default async function generateWav(
-    whatToPlay: PlaybackSequence,
+export async function generateWav(
+    sequence: MusicalSequence,
     tempo: number,
 ): Promise<Blob>
 {
-    const audioBuffer = await getAudioBuffer(whatToPlay, tempo);
+    const audioBuffer = await getAudioBuffer(sequence, tempo);
     const blob = audioBufferToWav(audioBuffer);
     return blob;
 }

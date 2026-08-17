@@ -9,37 +9,8 @@
 </head>
 <body>
     <section id="language-selector"></section>
-    <p>
-        This tool plays a musical pattern at an initial position,
-        then shifts it semitone by semitone until a given position and back
-    </p>
     <hr />
-    <p>
-        <label>Choose a musical pattern:</label>
-        <select id="musical_pattern"></select>
-        <select id="pattern_repetition">
-            <option value="A">Ascending</option>
-            <option value="D">Descending</option>
-            <option value="AD">Ascending then descending</option>
-            <option value="DA">Descending then ascending</option>
-            <option value="ADA">Ascending then descending then ascending</option>
-            <option value="DAD">Descending then ascending then descending</option>
-        </select>
-    </p>
-    <p>
-        <label>Choose initial lowest note:</label>
-        <select id="start_note_pitch"></select>
-        <select id="start_note_octave"></select>
-    </p>
-    <p>
-        <label>Choose furthest lowest note:</label>
-        <select id="end_note_pitch"></select>
-        <select id="end_note_octave"></select>
-    </p>
-    <p>
-        <label>Choose a tempo:</label>
-        <input type="number" id="tempo" min="1" value=140>
-    </p>
+    <section id="exercise-selector"></section>
     <p>
         <button id="save">Save</button>
         <button id="generate">Generate</button>

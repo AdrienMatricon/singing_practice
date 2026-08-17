@@ -1,14 +1,16 @@
 
 import { CreditsController } from "./controllers/CreditsController";
+import { ExerciseSelectionController } from "./controllers/ExerciseSelectionController";
 import { LanguageSelectionController } from "./controllers/LanguageSelectionController";
 import { initializeTranslation } from "./i18n/translate";
+import { Exercise, toExercise, getMusicalSequence } from "./model/Exercise";
 import { ActiveLanguage } from "./model/Language";
+import { toABC } from "./model/Note";
 import { CreditsView } from "./ui/CreditsView";
+import { ExerciseSelectionView } from "./ui/ExerciseSelectionView";
 import { LanguageSelectionView } from "./ui/LanguageSelectionView";
-
-import musicalPatterns from "./data/musical_patterns";
-import pitches from "./data/pitches";
-import generateWav from "./utils/wavGenerator"
+import * as jsextra from "./utils/jsextra";
+import { generateWav } from "./utils/wavGenerator"
 
 import "./style.css";
 
@@ -22,204 +24,52 @@ const languageSelectionView
     = new LanguageSelectionView(document.querySelector("#language-selector")!);
 const creditsView
     = new CreditsView(document.querySelector("#credits")!);
+const exerciseSelectionView
+    = new ExerciseSelectionView(document.querySelector("#exercise-selector")!);
 
 // Controllers
 const languageSelectionController
     = new LanguageSelectionController(languageSelectionView, activeLanguage);
 const creditsController
     = new CreditsController(creditsView, activeLanguage);
+const exerciseSelectionController
+    = new ExerciseSelectionController(exerciseSelectionView, activeLanguage);
 
 
-type Parameters = {
-    musical_pattern: string,
-    pattern_repetition: string,
-    start_note_pitch: string,
-    start_note_octave: number,
-    end_note_pitch: string,
-    end_note_octave: number,
-    tempo: number,
-};
-
-type SavedParameters = {
+type SavedExercise = {
     name: string,
-    params: Parameters,
+    exercise: Exercise,
 };
 
 // Global variables
-let parameterHistory: Parameters[] = [];
-let savedParameters: SavedParameters[] = [];
-
-
-// Check that a given value is a valid option for a select object
-function isValidOption(selectObject: HTMLSelectElement, value: string|number): boolean
-{
-    for (const option of selectObject.options)
-    {
-        if (option.value === value)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-
-// Generate all the parameters set by the user
-function getParameters(): Parameters
-{
-    return {
-        musical_pattern: (document.getElementById("musical_pattern") as HTMLSelectElement).value,
-        pattern_repetition: (document.getElementById("pattern_repetition") as HTMLSelectElement).value,
-        start_note_pitch: (document.getElementById("start_note_pitch") as HTMLSelectElement).value,
-        start_note_octave: parseInt((document.getElementById("start_note_octave") as HTMLSelectElement).value),
-        end_note_pitch: (document.getElementById("end_note_pitch") as HTMLSelectElement).value,
-        end_note_octave: parseInt((document.getElementById("end_note_octave") as HTMLSelectElement).value),
-        tempo: parseInt((document.getElementById("tempo") as HTMLInputElement).value)
-    };
-}
-
-
-function setParameters(parameters: Parameters): void
-{
-    // Get relevant elements
-    const musicalPattern = document.getElementById("musical_pattern") as HTMLSelectElement;
-    const patternRepetition = document.getElementById("pattern_repetition") as HTMLSelectElement;
-    const startNotePitch = document.getElementById("start_note_pitch") as HTMLSelectElement;
-    const startNoteOctave = document.getElementById("start_note_octave") as HTMLSelectElement;
-    const endNotePitch = document.getElementById("end_note_pitch") as HTMLSelectElement;
-    const endNoteOctave = document.getElementById("end_note_octave") as HTMLSelectElement;
-    const tempo = document.getElementById("tempo") as HTMLInputElement;
-
-    // Check that parameters are valid
-    if (!isValidOption(musicalPattern, parameters.musical_pattern)
-     || !isValidOption(patternRepetition, parameters.pattern_repetition)
-     || !isValidOption(startNotePitch, parameters.start_note_pitch)
-     || !isValidOption(startNoteOctave, parameters.start_note_octave)
-     || !isValidOption(endNotePitch, parameters.end_note_pitch)
-     || !isValidOption(endNoteOctave, parameters.end_note_octave)
-     || parameters.tempo < 1)
-    {
-        console.log("Cannot set parameters because they are invalid:", JSON.stringify(parameters));
-        return;
-    }
-
-    musicalPattern.value = parameters.musical_pattern;
-    patternRepetition.value = parameters.pattern_repetition;
-    startNotePitch.value = parameters.start_note_pitch;
-    startNoteOctave.value = parameters.start_note_octave.toString();
-    endNotePitch.value = parameters.end_note_pitch;
-    endNoteOctave.value = parameters.end_note_octave.toString();
-    tempo.value = parameters.tempo.toString();
-}
-
-
-// Get intervals for the full pattern, including repetitions
-function getFullPattern(parameters: Parameters): number[]
-{
-    let intervals = musicalPatterns[parameters.musical_pattern as keyof typeof musicalPatterns].intervals;
-    let fullPattern = [];
-    for (let char of parameters.pattern_repetition)
-    {
-        let toAppend = [];
-        if (char === "A")
-        {
-            toAppend = [...intervals];
-        }
-        else
-        {
-            toAppend = [...intervals].reverse()
-        }
-
-        if (fullPattern.length > 0)
-        {
-            // Don't repeat last note from previous repetitions
-            toAppend.shift();
-        }
-
-        fullPattern.push(...toAppend)
-    }
-
-    return fullPattern;
-}
-
-
-// The pattern will be played at an initial position, then shifted semitone by semitone until a given position and back
-function getLowestNotes(parameters: Parameters): number[]
-{
-    const startNote = pitches[parameters.start_note_pitch as keyof typeof pitches].number + 12 * (1 + parameters.start_note_octave);
-    const endNote = pitches[parameters.end_note_pitch as keyof typeof pitches].number + 12 * (1 + parameters.end_note_octave);
-
-    // Go from start to end
-    let lowestNotes = [];
-    if (startNote <= endNote)
-    {
-        for (let i = startNote; i <= endNote; ++i)
-        {
-            lowestNotes.push(i);
-        }
-    }
-    else
-    {
-        for (let i = startNote; i >= endNote; --i)
-        {
-            lowestNotes.push(i);
-        }
-    }
-
-    // Go back from end to start
-    const back = [...lowestNotes].reverse();
-    if (back.length > 1)
-    {
-        back.shift();
-        lowestNotes.push(...back);
-    }
-
-    return lowestNotes;
-}
-
-
-// Returns what to play as an array of arrays
-// - The out array contains an array per beat
-// - Each inner array is what to play on that beat
-function getWhatToPlay(parameters: Parameters): number[][]
-{
-    const fullPattern = getFullPattern(parameters);
-    const lowestNotes = getLowestNotes(parameters);
-
-    let toPlay = [];
-
-    for (const lowest of lowestNotes)
-    {
-        const notes = fullPattern.map(number => number + lowest);
-
-        toPlay.push([]);
-        toPlay.push([notes[0]]);
-        toPlay.push([]);
-        for (const note of notes)
-        {
-            toPlay.push([note]);
-        }
-    }
-
-    return toPlay;
-}
+let exerciseHistory: Exercise[] = [];
+let savedExercises: SavedExercise[] = [];
 
 
 // Generate a filename (without the extension)
-function getMeaningfulFileName(parameters: Parameters): string
+function getMeaningfulFileName(exercise: Exercise): string
 {
-    return parameters.musical_pattern
-         + "_"
-         + parameters.pattern_repetition
-         + "_"
-         + pitches[parameters.start_note_pitch as keyof typeof pitches].name
-         + parameters.start_note_octave
-         +"_to_"
-         + pitches[parameters.end_note_pitch as keyof typeof pitches].name
-         + parameters.end_note_octave
-         + "_"
-         + parameters.tempo
-         + "bpm";
+    let name = "";
+
+    const splitPatternKey = exercise.musicalPattern.translationKey.split("/");
+    name += splitPatternKey[splitPatternKey.length - 1];
+
+    name += "_x" + exercise.nbTimesPatternPlayed;
+
+    for (const bound of exercise.progression)
+    {
+        name += "_";
+        switch (bound.type)
+        {
+        case "lowest": name += "lo"; break;
+        case "highest": name += "hi"; break;
+        }   // switch (bound.type)
+        name += toABC(bound.note);
+    }
+
+    name += "_" + exercise.tempo + "bpm";
+
+    return name;
 }
 
 
@@ -237,25 +87,25 @@ function displayHistory(): void
 
     // Create list caption
     let caption = document.createElement("figcaption");
-    caption.innerText = (parameterHistory.length === 0) ? "No history" : "History:";
+    caption.innerText = (exerciseHistory.length === 0) ? "No history" : "History:";
     history.appendChild(caption);
 
     // Create list
     let list = document.createElement("ul");
     history.appendChild(list);
-    const reversedHistory = [...parameterHistory].reverse();
+    const reversedHistory = [...exerciseHistory].reverse();
     for (const toDisplay of reversedHistory)
     {
         let historyItem = document.createElement("li");
         historyItem.innerText = getMeaningfulFileName(toDisplay);
         list.appendChild(historyItem);
 
-        historyItem.addEventListener("click", () => { setParameters(toDisplay); });
+        historyItem.addEventListener("click", () => { exerciseSelectionView.setExercise(toDisplay); });
     }
 }
 
 
-// Update the displayed saved params
+// Update the displayed saved exercises
 function displaySaved(): void
 {
     // Get element
@@ -269,21 +119,21 @@ function displaySaved(): void
 
     // Create list caption
     let caption = document.createElement("figcaption");
-    caption.innerText = (savedParameters.length === 0) ? "No saved exercices" : "Saved exercices:";
+    caption.innerText = (savedExercises.length === 0) ? "No saved exercise" : "Saved exercises:";
     saved.appendChild(caption);
 
     // Create list
     let list = document.createElement("ul");
     saved.appendChild(list);
-    for (let i = savedParameters.length - 1; i >= 0; --i)
+    for (let i = savedExercises.length - 1; i >= 0; --i)
     {
-        let toDisplay = savedParameters[i];
+        let toDisplay = savedExercises[i];
 
         // List item
         let savedItem = document.createElement("li");
         list.appendChild(savedItem);
 
-        // Div with the chosen and default names, clickable to use the params
+        // Div with the chosen and default names, clickable to load the exercise
         {
             let div = document.createElement("div");
             savedItem.appendChild(div);
@@ -296,10 +146,10 @@ function displaySaved(): void
             }
 
             let defaultName = document.createElement("div");
-            defaultName.innerText = getMeaningfulFileName(toDisplay.params);
+            defaultName.innerText = getMeaningfulFileName(toDisplay.exercise);
             div.appendChild(defaultName);
 
-            div.addEventListener("click", () => { setParameters(toDisplay.params); });
+            div.addEventListener("click", () => { exerciseSelectionView.setExercise(toDisplay.exercise); });
         }
 
         // Rename button
@@ -321,7 +171,7 @@ function displaySaved(): void
                 toDisplay.name = name;
 
                 // Update
-                window.localStorage.setItem("saved", JSON.stringify(savedParameters))
+                window.localStorage.setItem("saved", JSON.stringify(savedExercises))
                 displaySaved();
             });
         }
@@ -333,7 +183,7 @@ function displaySaved(): void
             savedItem.appendChild(button);
             button.addEventListener("click", () => {
                 // Get name
-                const name = (toDisplay.name !== "") ? toDisplay.name : getMeaningfulFileName(toDisplay.params);
+                const name = (toDisplay.name !== "") ? toDisplay.name : getMeaningfulFileName(toDisplay.exercise);
 
                 // Ask for confirmation
                 if (!confirm("Are you sure you want to remove " + name + ' ?'))
@@ -342,10 +192,10 @@ function displaySaved(): void
                 }
 
                 // Remove saved
-                savedParameters.splice(i, 1);
+                savedExercises.splice(i, 1);
 
                 // Update
-                window.localStorage.setItem("saved", JSON.stringify(savedParameters))
+                window.localStorage.setItem("saved", JSON.stringify(savedExercises))
                 displaySaved();
             });
         }
@@ -353,64 +203,42 @@ function displaySaved(): void
 }
 
 
-// Initialize pattern selector
-{
-    const selector = document.getElementById("musical_pattern") as HTMLSelectElement;
-    for (const key of Object.keys(musicalPatterns) as (keyof typeof musicalPatterns)[])
-    {
-        selector.add(new Option(musicalPatterns[key].name, key));
-    }
-}
-
-
-// Initialize note selectors
-{
-    const startPitchSelector = document.getElementById("start_note_pitch") as HTMLSelectElement;
-    const endPitchSelector = document.getElementById("end_note_pitch") as HTMLSelectElement;
-    for (const key of Object.keys(pitches)as (keyof typeof pitches)[])
-    {
-        startPitchSelector.add(new Option(pitches[key].name, key));
-        endPitchSelector.add(new Option(pitches[key].name, key));
-    }
-
-    const startOctaveSelector = document.getElementById("start_note_octave") as HTMLSelectElement;
-    const endOctaveSelector = document.getElementById("end_note_octave") as HTMLSelectElement;
-    for (let i = 0; i <= 9; ++i)
-    {
-        startOctaveSelector.add(new Option(i.toString()));
-        endOctaveSelector.add(new Option(i.toString()));
-    }
-}
-
-
-// Enforce valid value for tempo
-{
-    const tempo = document.getElementById("tempo") as HTMLInputElement;
-    tempo.addEventListener("input", () => {
-        if (!tempo.checkValidity())
-        {
-            tempo.value = "200";
-        }
-    });
-}
-
-
 // Retrieve and display history (if any)
 {
     // Get history (if any)
     const serialized = window.localStorage.getItem("history");
-    if (serialized)
+    if (!serialized)
     {
-        parameterHistory = JSON.parse(serialized);
+        console.error("Cannot load saved exercises (cannot parse JSON): ", serialized);
+    }
+    else
+    {
+        const parsed = JSON.parse(serialized);
+        if (!Array.isArray(parsed))
+        {
+            console.error("Cannot load history (not an array):", parsed);
+        }
+        else
+        {
+            const converted = parsed.map(x => toExercise(x));
+            if (!converted.every(x => (x !== null)))
+            {
+                console.error("Cannot load history (invalid exercises): ", parsed);
+            }
+            else
+            {
+                exerciseHistory = converted;
+            }
+        }
     }
 
     // Display history
     displayHistory();
 
-    // Restore last parameters
-    if (parameterHistory.length > 0)
+    // Restore last exercise
+    if (exerciseHistory.length > 0)
     {
-        setParameters(parameterHistory[parameterHistory.length - 1]);
+        exerciseSelectionView.setExercise(exerciseHistory[exerciseHistory.length - 1]);
     }
 }
 
@@ -419,9 +247,29 @@ function displaySaved(): void
 {
     // Get saved (if any)
     const serialized = window.localStorage.getItem("saved");
-    if (serialized)
+    if (!serialized)
     {
-        savedParameters = JSON.parse(serialized);
+        console.error("Cannot load saved exercises (cannot parse JSON): ", serialized);
+    }
+    else
+    {
+        const parsed = JSON.parse(serialized);
+        if (!Array.isArray(parsed))
+        {
+            console.error("Cannot load saved exercises (not an array): ", parsed);
+        }
+        else
+        {
+            const converted = parsed.map(x => ({ name: x.name, exercise: toExercise(x.exercise)}));
+            if (!converted.every(x => ( (jsextra.isString(x.name)) && (x.exercise !== null) ) ))
+            {
+                console.error("Cannot load saved exercises (invalid exercises): ", parsed);
+            }
+            else
+            {
+                savedExercises = converted as SavedExercise[];
+            }
+        }
     }
 
     // Display saved
@@ -429,10 +277,16 @@ function displaySaved(): void
 }
 
 
-// Save parameters when the button is clicked
+// Save exercise when the button is clicked
 (document.getElementById("save") as HTMLElement).addEventListener("click", () => {
-    // Get params
-    const parameters = getParameters();
+    // Get exercise
+    const exercise = exerciseSelectionView.getExercise();
+
+    if (exercise === null)
+    {
+        alert("Cannot save invalid exercise");
+        return;
+    }
 
     // Get name
     let name = prompt("Choose a name (optional)");
@@ -447,8 +301,8 @@ function displaySaved(): void
     }
 
     // Save
-    savedParameters.push({name: name, params: parameters});
-    window.localStorage.setItem("saved", JSON.stringify(savedParameters))
+    savedExercises.push({name: name, exercise: exercise});
+    window.localStorage.setItem("saved", JSON.stringify(savedExercises))
 
     // Update display
     displaySaved();
@@ -465,31 +319,38 @@ function displaySaved(): void
     downloadLink.hidden = true;
     generateButton.innerText = "Generating..."
 
+    // Get exercise
+    const exercise = exerciseSelectionView.getExercise();
+    if (exercise === null)
+    {
+        alert("Cannot generate invalid exercise");
+        return;
+    }
+
     // Generate
-    const parameters = getParameters();
-    const generated = await generateWav(getWhatToPlay(parameters), parameters.tempo);
+    const generated = await generateWav(getMusicalSequence(exercise), exercise.tempo);
     const url = URL.createObjectURL(generated);
     const audio = document.querySelector("audio") as HTMLAudioElement;
     audio.src = url;
     downloadLink.href = url;
-    downloadLink.download = getMeaningfulFileName(parameters) + ".wav"
+    downloadLink.download = getMeaningfulFileName(exercise) + ".wav"
 
     // Update history
     {
-        // Remove parameters if they already were in the history
-        parameterHistory = parameterHistory.filter(p => JSON.stringify(p) !== JSON.stringify(parameters));
+        // Remove exercise if it already was in the history
+        exerciseHistory = exerciseHistory.filter(p => JSON.stringify(p) !== JSON.stringify(exercise));
 
-        // Push new parameters
-        parameterHistory.push(parameters);
+        // Push new exercise
+        exerciseHistory.push(exercise);
 
         // Maximum history length
-        while(parameterHistory.length > 20)
+        while(exerciseHistory.length > 20)
         {
-            parameterHistory.shift();
+            exerciseHistory.shift();
         }
 
         // Save new history
-        window.localStorage.setItem("history", JSON.stringify(parameterHistory))
+        window.localStorage.setItem("history", JSON.stringify(exerciseHistory))
 
         // Update display
         displayHistory();

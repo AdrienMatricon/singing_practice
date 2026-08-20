@@ -12,11 +12,11 @@
     cursor: pointer;
 }
 
-#history li {
+#exercise-history li {
     cursor: pointer;
 }
 
-#history li:hover {
+#exercise-history li:hover {
     background-color: #eee;
 }
 

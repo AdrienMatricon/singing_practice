@@ -1,12 +1,15 @@
 
 import { CreditsController } from "./controllers/CreditsController";
+import { ExerciseHistoryController } from "./controllers/ExerciseHistoryController";
 import { ExerciseSelectionController } from "./controllers/ExerciseSelectionController";
 import { LanguageSelectionController } from "./controllers/LanguageSelectionController";
 import { initializeTranslation } from "./i18n/translate";
 import { Exercise, toExercise, getMusicalSequence } from "./model/Exercise";
+import { ExerciseHistory } from "./model/ExerciseHistory";
 import { ActiveLanguage } from "./model/Language";
 import { toABC } from "./model/Note";
 import { CreditsView } from "./ui/CreditsView";
+import { ExerciseHistoryView } from "./ui/ExerciseHistoryView";
 import { ExerciseSelectionView } from "./ui/ExerciseSelectionView";
 import { LanguageSelectionView } from "./ui/LanguageSelectionView";
 import * as jsextra from "./utils/jsextra";
@@ -19,6 +22,9 @@ import "./style.css";
 const activeLanguage = new ActiveLanguage();
 initializeTranslation(activeLanguage);
 
+// Models
+const exerciseHistory = new ExerciseHistory();
+
 // Views
 const languageSelectionView
     = new LanguageSelectionView(document.querySelector("#language-selector")!);
@@ -26,6 +32,8 @@ const creditsView
     = new CreditsView(document.querySelector("#credits")!);
 const exerciseSelectionView
     = new ExerciseSelectionView(document.querySelector("#exercise-selector")!);
+const exerciseHistoryView
+    = new ExerciseHistoryView(document.querySelector("#exercise-history")!);
 
 // Controllers
 const languageSelectionController
@@ -34,6 +42,8 @@ const creditsController
     = new CreditsController(creditsView, activeLanguage);
 const exerciseSelectionController
     = new ExerciseSelectionController(exerciseSelectionView, activeLanguage);
+const exerciseHistoryController
+    = new ExerciseHistoryController(exerciseHistoryView, activeLanguage, exerciseHistory, exerciseSelectionView);
 
 
 type SavedExercise = {
@@ -42,7 +52,6 @@ type SavedExercise = {
 };
 
 // Global variables
-let exerciseHistory: Exercise[] = [];
 let savedExercises: SavedExercise[] = [];
 
 
@@ -70,38 +79,6 @@ function getMeaningfulFileName(exercise: Exercise): string
     name += "_" + exercise.tempo + "bpm";
 
     return name;
-}
-
-
-// Update the displayed history
-function displayHistory(): void
-{
-    // Get element
-    const history = document.getElementById("history") as HTMLElement;
-
-    // Remove all children
-    while (history.firstChild)
-    {
-        history.removeChild(history.firstChild);
-    }
-
-    // Create list caption
-    let caption = document.createElement("figcaption");
-    caption.innerText = (exerciseHistory.length === 0) ? "No history" : "History:";
-    history.appendChild(caption);
-
-    // Create list
-    let list = document.createElement("ul");
-    history.appendChild(list);
-    const reversedHistory = [...exerciseHistory].reverse();
-    for (const toDisplay of reversedHistory)
-    {
-        let historyItem = document.createElement("li");
-        historyItem.innerText = getMeaningfulFileName(toDisplay);
-        list.appendChild(historyItem);
-
-        historyItem.addEventListener("click", () => { exerciseSelectionView.setExercise(toDisplay); });
-    }
 }
 
 
@@ -203,46 +180,6 @@ function displaySaved(): void
 }
 
 
-// Retrieve and display history (if any)
-{
-    // Get history (if any)
-    const serialized = window.localStorage.getItem("history");
-    if (!serialized)
-    {
-        console.error("Cannot load saved exercises (cannot parse JSON): ", serialized);
-    }
-    else
-    {
-        const parsed = JSON.parse(serialized);
-        if (!Array.isArray(parsed))
-        {
-            console.error("Cannot load history (not an array):", parsed);
-        }
-        else
-        {
-            const converted = parsed.map(x => toExercise(x));
-            if (!converted.every(x => (x !== null)))
-            {
-                console.error("Cannot load history (invalid exercises): ", parsed);
-            }
-            else
-            {
-                exerciseHistory = converted;
-            }
-        }
-    }
-
-    // Display history
-    displayHistory();
-
-    // Restore last exercise
-    if (exerciseHistory.length > 0)
-    {
-        exerciseSelectionView.setExercise(exerciseHistory[exerciseHistory.length - 1]);
-    }
-}
-
-
 // Retrieve and display saved (if any)
 {
     // Get saved (if any)
@@ -336,25 +273,7 @@ function displaySaved(): void
     downloadLink.download = getMeaningfulFileName(exercise) + ".wav"
 
     // Update history
-    {
-        // Remove exercise if it already was in the history
-        exerciseHistory = exerciseHistory.filter(p => JSON.stringify(p) !== JSON.stringify(exercise));
-
-        // Push new exercise
-        exerciseHistory.push(exercise);
-
-        // Maximum history length
-        while(exerciseHistory.length > 20)
-        {
-            exerciseHistory.shift();
-        }
-
-        // Save new history
-        window.localStorage.setItem("history", JSON.stringify(exerciseHistory))
-
-        // Update display
-        displayHistory();
-    }
+    exerciseHistory.push(exercise);
 
     // Display
     player.hidden = false;

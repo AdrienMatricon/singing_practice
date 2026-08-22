@@ -1,4 +1,4 @@
-import { setTranslationKey } from "../i18n/translate";
+import { setTranslationKey, updateLanguage } from "../i18n/translate";
 import { Exercise, progressionBoundTypes } from "../model/Exercise";
 import { toABC, toDoReMi } from "../model/Note";
 
@@ -51,4 +51,18 @@ export function getExerciseDescriptionSpan(exercise: Exercise): HTMLSpanElement
     element.append(shiftBounds);
 
     return element;
+}
+
+
+// Get a string describing an exercise in the current language
+export function getExerciseDescription(exercise: Exercise): string
+{
+    // Create translatable span
+    const span = getExerciseDescriptionSpan(exercise);
+
+    // Get current translation
+    updateLanguage(span);
+
+    // Extract string
+    return span.innerText;
 }

@@ -22,7 +22,7 @@ export class LanguageSelectionView extends View
         {
             const img = document.createElement("img");
             img.alt = language;
-            img.src = `/languages/${language}.svg`
+            img.src = `${import.meta.env.BASE_URL}/languages/${language}.svg`
             img.addEventListener("click", () => {
                 this.dispatchEvent(new CustomEvent<Language>("change", {
                     detail: language,

@@ -40,14 +40,14 @@ export class SavedExercises extends EventTarget
         const parsed = JSON.parse(serialized);
         if (!Array.isArray(parsed))
         {
-            console.error("Cannot load history (not an array):", parsed);
+            console.error("Cannot load saved exercises (not an array):", parsed);
             return;
         }
 
         const converted = parsed.map(x => ({
             "id": (jsextra.isString(x.id) ? x.id : crypto.randomUUID()),
             "name": ((jsextra.isString(x.name) && x.name !== "") ? x.name : null),
-            "exercise": toExercise(x.exercise),
+            "exercise": toExercise(x.exercise !== undefined ? x.exercise : x.params),
         }));
 
         if (!converted.every(x => (x.exercise !== null)))

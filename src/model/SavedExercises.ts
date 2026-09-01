@@ -47,7 +47,7 @@ export class SavedExercises extends EventTarget
         const converted = parsed.map(x => ({
             "id": (jsextra.isString(x.id) ? x.id : crypto.randomUUID()),
             "name": ((jsextra.isString(x.name) && x.name !== "") ? x.name : null),
-            "exercise": toExercise(x.exercise),
+            "exercise": toExercise(x.exercise !== undefined ? x.exercise : x.params),
         }));
 
         if (!converted.every(x => (x.exercise !== null)))

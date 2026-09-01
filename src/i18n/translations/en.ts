@@ -38,10 +38,12 @@ export const en = {
     "musical-pattern/minor-third-descending": "Minor third (descending)",
     "musical-pattern/pentachord-ascending": "Pentachord (ascending)",
     "musical-pattern/pentachord-descending": "Pentachord (descending)",
+    "output/download": "Download",
+    "output/generate": "Generate",
+    "output/save": "Save",
     "saved-exercises/confirm-remove": "Are you sure you want to delete:\n\n{}",
     "saved-exercises/name-prompt": "Choose a name for the exercise (optional)",
     "saved-exercises/no": "No saved exercise",
-    "saved-exercises/unnamed": "unnamed",
     "saved-exercises/yes": "Saved exercises:",
     "title": "Singing practice",
 } as const;

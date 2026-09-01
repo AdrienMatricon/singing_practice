@@ -4,60 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/favicon.ico">
-    <script type="module" src="/src/main.js"></script>
-    <title>Singing exercices</title>
+    <script type="module" src="/src/main.ts"></script>
+    <title></title>
 </head>
 <body>
-    <p>
-        This tool plays a musical pattern at an initial position,
-        then shifts it semitone by semitone until a given position and back
-    </p>
+    <section id="language-selector"></section>
     <hr />
-    <p>
-        <label>Choose a musical pattern:</label>
-        <select id="musical_pattern"></select>
-        <select id="pattern_repetition">
-            <option value="A">Ascending</option>
-            <option value="D">Descending</option>
-            <option value="AD">Ascending then descending</option>
-            <option value="DA">Descending then ascending</option>
-            <option value="ADA">Ascending then descending then ascending</option>
-            <option value="DAD">Descending then ascending then descending</option>
-        </select>
-    </p>
-    <p>
-        <label>Choose initial lowest note:</label>
-        <select id="start_note_pitch"></select>
-        <select id="start_note_octave"></select>
-    </p>
-    <p>
-        <label>Choose furthest lowest note:</label>
-        <select id="end_note_pitch"></select>
-        <select id="end_note_octave"></select>
-    </p>
-    <p>
-        <label>Choose a tempo:</label>
-        <input type="number" id="tempo" min="1" value=140>
-    </p>
-    <p>
-        <button id="save">Save</button>
-        <button id="generate">Generate</button>
-        <a id="download" hidden>
-            <button>Download</button>
-        </a>
-    </p>
-    <audio id="player" controls loop hidden></audio>
+    <section id="exercise-selector"></section>
+    <section id="output"></section>
     <hr />
-    <figure id="saved"></figure>
+    <section id="saved-exercises"></section>
     <hr />
-    <figure id="history"></figure>
-    <footer>
-        <hr />
-        <ul>
-            <li>This tool was made by Adrien Matricon and has its own <a href="https://github.com/AdrienMatricon/singing_practice">GitHub page</a></li>
-            <li>It relies on <a href="https://tonejs.github.io/">ToneJS</a> for sound generation, licensed under the MIT License</li>
-            <li>All piano samples are taken from the <a href="https://github.com/sfzinstruments/SalamanderGrandPiano">Salamander Grand Piano V3, by Alexander Holm</a>, licensed under the Creative Commons Attribution 3.0 Unported License (CC BY 3.0)</li>
-        </ul>
-    </footer>
+    <section id="exercise-history"></section>
+    <hr />
+    <footer id="credits"></footer>
 </body>
 </html>

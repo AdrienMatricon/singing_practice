@@ -40,6 +40,8 @@ export const fr = {
     "musical-pattern/minor-third-descending": "Tierce mineure (descendante)",
     "musical-pattern/pentachord-ascending": "Pentacorde (montant)",
     "musical-pattern/pentachord-descending": "Pentacorde (descendant)",
+    "musical-pattern/trichord-ascending": "Tricorde (montant)",
+    "musical-pattern/trichord-descending": "Tricorde (descendant)",
     "output/download": "Télécharger",
     "output/generate": "Générer",
     "output/save": "Sauvegarder",

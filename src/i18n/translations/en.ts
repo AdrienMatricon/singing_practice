@@ -38,6 +38,8 @@ export const en = {
     "musical-pattern/minor-third-descending": "Minor third (descending)",
     "musical-pattern/pentachord-ascending": "Pentachord (ascending)",
     "musical-pattern/pentachord-descending": "Pentachord (descending)",
+    "musical-pattern/trichord-ascending": "Trichord (ascending)",
+    "musical-pattern/trichord-descending": "Trichord (descending)",
     "output/download": "Download",
     "output/generate": "Generate",
     "output/save": "Save",

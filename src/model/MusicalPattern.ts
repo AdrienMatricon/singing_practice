@@ -26,6 +26,22 @@ export function isMusicalPattern(value: unknown): value is MusicalPattern
 // All musical patterns that can be selected by the user
 export const selectableMusicalPatterns: MusicalPattern[] = [
     {
+        translationKey: "musical-pattern/trichord-ascending",
+        sequence: [
+            { note: 0,    duration: 1},
+            { note: 2,    duration: 1},
+            { note: 4,    duration: 1},
+        ]
+    },
+    {
+        translationKey: "musical-pattern/trichord-descending",
+        sequence: [
+            { note: 4,    duration: 1},
+            { note: 2,    duration: 1},
+            { note: 0,    duration: 1},
+        ]
+    },
+    {
         translationKey: "musical-pattern/pentachord-ascending",
         sequence: [
             { note: 0,    duration: 1},

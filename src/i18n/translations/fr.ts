@@ -18,7 +18,7 @@ export const fr = {
     "exercise-selection/progression-item/start": "Commencer avec {}",
     "exercise-selection/progression-item/then": "Puis {}",
     "exercise-selection/progression-label": "Progression",
-    "exercise-selection/progression-step/back": "revenir au début",
+    "exercise-selection/progression-step/back": "transposer jusqu'au point de départ",
     "exercise-selection/progression-step/shift": "transposer jusqu'à",
     "exercise-selection/progression-step/stop": "stop",
     "exercise-selection/played-number-label": "joué {} fois | ",

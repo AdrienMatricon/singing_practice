@@ -16,7 +16,7 @@ export const en = {
     "exercise-selection/progression-item/start": "Start with {}",
     "exercise-selection/progression-item/then": "Then {}",
     "exercise-selection/progression-label": "Progression",
-    "exercise-selection/progression-step/back": "back to start",
+    "exercise-selection/progression-step/back": "shift until back to start",
     "exercise-selection/progression-step/shift": "shift until",
     "exercise-selection/progression-step/stop": "stop",
     "exercise-selection/played-number-label": "played {} times, ",

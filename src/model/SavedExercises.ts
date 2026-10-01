@@ -70,7 +70,7 @@ export class SavedExercises extends EventTarget
             "exercise": exercise,
         });
 
-        // Save new history
+        // Store updated saved exercises
         storage.set(storageKey, JSON.stringify(this.saved))
 
         // Dispatch event
@@ -93,8 +93,17 @@ export class SavedExercises extends EventTarget
         const updated = this.saved.find(s => (s.id === entry.id));
         if (updated != null)
         {
+            // Update actual entry
             updated.name = entry.name;
             updated.exercise = entry.exercise;
+
+            // Store updated saved exercises
+            storage.set(storageKey, JSON.stringify(this.saved))
+
+            // Dispatch event
+            this.dispatchEvent(new CustomEvent<SavedExerciseEntry[]>("change", {
+                detail: [...this.saved],
+            }));
         }
     }
 
@@ -102,6 +111,15 @@ export class SavedExercises extends EventTarget
     // Remove entry (identified by ID) if it exists
     public remove(entry: SavedExerciseEntry): void
     {
+        // Remove actual exercise
         this.saved = this.saved.filter(s => (s.id !== entry.id));
+
+        // Store updated saved exercises
+        storage.set(storageKey, JSON.stringify(this.saved))
+
+        // Dispatch event
+        this.dispatchEvent(new CustomEvent<SavedExerciseEntry[]>("change", {
+            detail: [...this.saved],
+        }));
     }
 };
